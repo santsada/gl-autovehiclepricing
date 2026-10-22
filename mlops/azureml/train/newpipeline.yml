@@ -1,0 +1,82 @@
+$schema: https://azuremlschemas.azureedge.net/latest/pipelineJob.schema.json
+# The end-to-end training pipeline, submitted by the workflow job `run-pipeline`
+# (`az ml job create --file mlops/azureml/train/newpipeline.yml`).
+#
+#   prep_data  ->  sweep_step (hyperparameter tuning)  ->  register_model
+#
+# It references assets that earlier workflow jobs create in the workspace:
+#   azureml:used-cars-data@latest     <- register-dataset   (data.yml)
+#   azureml:used-cars-train-env@...   <- register-environment (train-env.yml)
+#   azureml:prep_data / train_model / register_model@latest <- register-components
+type: pipeline
+display_name: used-cars-price-pipeline
+experiment_name: used-cars-price-experiment   # Where runs appear in Studio > Jobs
+description: Prepare data, tune a Random Forest, and register the used-car price model.
+
+inputs:
+  raw_data:
+    type: uri_file
+    path: azureml:used-cars-data@latest
+
+outputs:
+  train_data:
+    type: uri_folder
+  test_data:
+    type: uri_folder
+  model_info_output_path:
+    type: uri_folder
+
+settings:
+  default_datastore: azureml:workspaceblobstore   # Exists in every new workspace
+  # >>> MUST MATCH the cluster_name in the main workflow's `create-compute` job <<<
+  # (and the cluster you create in RUNBOOK step 4). Currently: cpu-cluster
+  default_compute: azureml:cpu-cluster
+  continue_on_step_failure: false
+
+jobs:
+  prep_data:
+    type: command
+    component: azureml:prep_data@latest
+    inputs:
+      raw_data: ${{parent.inputs.raw_data}}
+    outputs:
+      train_data: ${{parent.outputs.train_data}}
+      test_data: ${{parent.outputs.test_data}}
+
+  sweep_step:
+    name: sweep_step
+    display_name: sweep-train
+    type: sweep
+    inputs:
+      train_data: ${{parent.jobs.prep_data.outputs.train_data}}
+      test_data: ${{parent.jobs.prep_data.outputs.test_data}}
+    outputs:
+      model_output:
+        type: mlflow_model
+    sampling_algorithm: random            # Tries random combinations from search_space
+    trial: azureml:train_model@latest     # Component run for every trial
+    search_space:
+      n_estimators:
+        type: choice
+        values: [10, 20, 30, 50]
+      max_depth:
+        type: choice
+        values: [5, 10, 15, 20]
+    objective:
+      goal: minimize
+      primary_metric: MSE                 # Logged by train.py
+    limits:
+      max_total_trials: 16
+      # Cluster max_instances is 1, so extra concurrency just queues. Raise
+      # max_instances (and your vCPU quota) to run trials in parallel.
+      max_concurrent_trials: 4
+      timeout: 7200                       # seconds
+
+  register_model:
+    type: command
+    component: azureml:register_model@latest
+    inputs:
+      model_name: "used_cars_price_prediction_model"   # Name in the model registry
+      model_path: ${{parent.jobs.sweep_step.outputs.model_output}}
+    outputs:
+      model_info_output_path: ${{parent.outputs.model_info_output_path}}

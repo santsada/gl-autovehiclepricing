@@ -1,0 +1,23 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+# Reusable component 3/3: registers the best model in the workspace model
+# registry. Used by newpipeline.yml as `azureml:register_model@latest`.
+type: command
+name: register_model
+display_name: register_model
+description: Register the best sweep model in the MLflow model registry.
+inputs:
+  model_name:
+    type: string
+  model_path:
+    type: mlflow_model
+outputs:
+  model_info_output_path:
+    type: uri_folder
+# Folder uploaded with the job; relative to THIS file.
+code: ../../../data-science/src
+command: >-
+  python register.py
+  --model_name ${{inputs.model_name}}
+  --model_path ${{inputs.model_path}}
+  --model_info_output_path ${{outputs.model_info_output_path}}
+environment: azureml:used-cars-train-env@latest

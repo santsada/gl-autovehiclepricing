@@ -1,0 +1,7 @@
+$schema: https://azuremlschemas.azureedge.net/latest/managedOnlineEndpoint.schema.json
+# OPTIONAL - not used by the training workflow, and NOT deployed/tested in the
+# original project. Costs money while it exists.
+# >>> CHANGE: endpoint names must be unique within an Azure region; pick your own
+# (and update `endpoint_name` in deployment.yml to match). <<<
+name: used-cars-price-endpoint
+auth_mode: key

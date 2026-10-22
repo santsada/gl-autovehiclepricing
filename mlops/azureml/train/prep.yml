@@ -1,0 +1,28 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+# Reusable component 1/3: data preparation. Registered in the workspace by the
+# workflow job `register-components` and used by newpipeline.yml as
+# `azureml:prep_data@latest`.
+type: command
+name: prep_data
+display_name: prep_data
+description: Validate, label-encode and split the used-car data into train and test sets.
+inputs:
+  raw_data:
+    type: uri_file
+  test_train_ratio:
+    type: number
+    default: 0.2
+outputs:
+  train_data:
+    type: uri_folder
+  test_data:
+    type: uri_folder
+# Folder uploaded with the job; relative to THIS file.
+code: ../../../data-science/src
+command: >-
+  python prep.py
+  --raw_data ${{inputs.raw_data}}
+  --test_train_ratio ${{inputs.test_train_ratio}}
+  --train_data ${{outputs.train_data}}
+  --test_data ${{outputs.test_data}}
+environment: azureml:used-cars-train-env@latest

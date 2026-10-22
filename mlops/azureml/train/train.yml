@@ -1,0 +1,32 @@
+$schema: https://azuremlschemas.azureedge.net/latest/commandComponent.schema.json
+# Reusable component 2/3: model training. Used as the `trial` of the sweep job in
+# newpipeline.yml (`azureml:train_model@latest`). The sweep overrides
+# n_estimators and max_depth for every trial; the defaults below apply only when
+# the component is run on its own.
+type: command
+name: train_model
+display_name: train_model
+inputs:
+  train_data:
+    type: uri_folder
+  test_data:
+    type: uri_folder
+  n_estimators:
+    type: integer
+    default: 100
+  max_depth:
+    type: integer
+    default: 10
+outputs:
+  model_output:
+    type: mlflow_model
+# Folder uploaded with the job; relative to THIS file.
+code: ../../../data-science/src
+command: >-
+  python train.py
+  --train_data ${{inputs.train_data}}
+  --test_data ${{inputs.test_data}}
+  --n_estimators ${{inputs.n_estimators}}
+  --max_depth ${{inputs.max_depth}}
+  --model_output ${{outputs.model_output}}
+environment: azureml:used-cars-train-env@latest

@@ -1,0 +1,11 @@
+$schema: https://azuremlschemas.azureedge.net/latest/environment.schema.json
+# Execution environment (Docker base image + conda packages) used by every step.
+# Referenced as `azureml:used-cars-train-env@latest` in prep.yml, train.yml,
+# register.yml. If you rename it, rename it in all three places.
+name: used-cars-train-env
+# Use a modern base image. (openmpi3.1.2-ubuntu18.04 combined with the old conda
+# file caused a >1 hour hang; this image is the tested one.)
+image: mcr.microsoft.com/azureml/openmpi4.1.0-ubuntu20.04
+# Path is relative to THIS file.
+conda_file: ../../../data-science/environment/train-conda.yml
+description: Python environment for the used-car price prediction training pipeline.

@@ -1,0 +1,10 @@
+$schema: https://azuremlschemas.azureedge.net/latest/data.schema.json
+# Registers data/used_cars.csv as an Azure ML data asset.
+# The name below must match:
+#   * `name:` passed to custom-register-dataset.yml in the main workflow
+#   * `azureml:used-cars-data@latest` in newpipeline.yml
+type: uri_file
+name: used-cars-data
+description: Dataset of used-car attributes and historical prices (lakhs) for price prediction.
+# Path is relative to THIS file. Keep the folder layout from the runbook.
+path: ../../../data/used_cars.csv

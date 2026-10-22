@@ -1,0 +1,8 @@
+$schema: https://azuremlschemas.azureedge.net/latest/managedOnlineDeployment.schema.json
+# OPTIONAL - see endpoint.yml. Serves the latest registered model; MLflow models
+# need no scoring script.
+name: blue
+endpoint_name: used-cars-price-endpoint        # must equal `name` in endpoint.yml
+model: azureml:used_cars_price_prediction_model@latest
+instance_type: Standard_DS3_v2                 # CHECK: needs vCPU quota in your subscription
+instance_count: 1
