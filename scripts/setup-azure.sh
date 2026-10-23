@@ -5,12 +5,12 @@
 # >>> CHANGE FOR NEW AZURE TENANT / GITHUB ACCOUNT: edit the 5 variables below <<<
 set -euo pipefail
 
-SUBSCRIPTION_ID="<new-subscription-id>"      # az account list -o table
+SUBSCRIPTION_ID="78407db7-ee1b-45db-86c3-dfe2aeb169cf"      # az account list -o table
 LOCATION="eastus"                            # any region with ML quota
-RESOURCE_GROUP="<new-resource-group-name>"   # must equal config-infra-prod.yml
-WORKSPACE="<new-aml-workspace-name>"         # must equal config-infra-prod.yml
-GITHUB_REPO="<new-github-owner>/<new-repo>"  # e.g. my-user/used-cars-mlops
-SP_NAME="used-cars-mlops-github"             # service principal display name
+RESOURCE_GROUP="gl-resourcegrp"   # must equal config-infra-prod.yml
+WORKSPACE="gl-workspace"         # must equal config-infra-prod.yml
+GITHUB_REPO="santsada/autovehiclepricing"  # e.g. my-user/used-cars-mlops
+SP_NAME="Azure-ARM-Prod-AutoVehiclePricing"             # service principal display name
 
 if [[ "$SUBSCRIPTION_ID" == \<* || "$RESOURCE_GROUP" == \<* || "$WORKSPACE" == \<* || "$GITHUB_REPO" == \<* ]]; then
   echo "Edit the variables at the top of this script first." >&2
@@ -37,7 +37,7 @@ echo "Workspace ready: $WORKSPACE"
 # The JSON (which contains a secret) is piped straight into the GitHub secret and
 # never written to disk or printed.
 # NOTE: `--sdk-auth` is deprecated in newer Azure CLI versions but still works. If
-# it is removed, switch to OIDC federated credentials (see RUNBOOK troubleshooting).
+
 az ad sp create-for-rbac \
   --name "$SP_NAME" \
   --role contributor \
