@@ -49,8 +49,8 @@ scripts/             setup-azure.sh, validate-local.sh
 
 | # | 🔧 What | Where | Original value | New value |
 |---|---|---|---|---|
-| 1 | Azure resource group name | `config-infra-prod.yml` → `resource_group` | `gl-resourcegrp` | your new RG |
-| 2 | Azure ML workspace name | `config-infra-prod.yml` → `aml_workspace` | `gl-workspace` | your new workspace |
+| 1 | Azure resource group name | `config-infra-prod.yml` → `resource_group` | `gl-pro3rg` | your new RG |
+| 2 | Azure ML workspace name | `config-infra-prod.yml` → `aml_workspace` | `gl-pro3ws` | your new workspace |
 | 3 | Azure subscription / tenant | `az login`, `az account set`, `scripts/setup-azure.sh` | old tenant's subscription | new subscription ID |
 | 4 | GitHub owner/repo | `scripts/setup-azure.sh` → `GITHUB_REPO`, `git remote` | `pia-ntsada/caronsale` | new `owner/repo` |
 | 5 | GitHub secret | repo → Settings → Secrets → Actions | `AZURE_CREDENTIALS` (old SP JSON) | **new** SP JSON, same name |

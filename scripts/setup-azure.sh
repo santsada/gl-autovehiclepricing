@@ -4,8 +4,8 @@ set -euo pipefail
 
 SUBSCRIPTION_ID="78407db7-ee1b-45db-86c3-dfe2aeb169cf"      # az account list -o table
 LOCATION="eastus"                            # any region with ML quota
-RESOURCE_GROUP="gl-resourcegrp"   # must equal config-infra-prod.yml
-WORKSPACE="gl-workspace"         # must equal config-infra-prod.yml
+RESOURCE_GROUP="gl-pro3rg"   # must equal config-infra-prod.yml
+WORKSPACE="gl-pro3ws"         # must equal config-infra-prod.yml
 GITHUB_REPO="santsada/autovehiclepricing"  # e.g. my-user/used-cars-mlops
 SP_NAME="Azure-ARM-Prod-AutoVehiclePricing"             # service principal display name
 

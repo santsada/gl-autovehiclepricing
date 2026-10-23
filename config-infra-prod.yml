@@ -15,5 +15,5 @@ variables:
   enable_monitoring: false
   ado_service_connection_rg: Azure-ARM-Prod
   ado_service_connection_aml_ws: Azure-ARM-Prod
-  resource_group: gl-resourcegrp
-  aml_workspace: gl-workspace
+  resource_group: gl-pro3rg
+  aml_workspace: gl-pro3ws
