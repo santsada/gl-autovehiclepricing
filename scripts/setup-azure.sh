@@ -1,8 +1,5 @@
 #!/usr/bin/env bash
 # Creates the Azure resources and GitHub secret needed by the pipeline.
-# Run it ONCE in the NEW Azure tenant after `az login` (RUNBOOK steps 2-6).
-#
-# >>> CHANGE FOR NEW AZURE TENANT / GITHUB ACCOUNT: edit the 5 variables below <<<
 set -euo pipefail
 
 SUBSCRIPTION_ID="78407db7-ee1b-45db-86c3-dfe2aeb169cf"      # az account list -o table
