@@ -154,7 +154,7 @@ for ns in Microsoft.MachineLearningServices Microsoft.ContainerRegistry Microsof
   az provider register --namespace $ns --wait; done
 az group create -n "$RG" -l "$LOC"
 az ml workspace create -n "$WS" -g "$RG" -l "$LOC"
-az ad sp create-for-rbac --name used-cars-mlops-github --role contributor \
+az ad sp create-for-rbac --name gl-autovehiclepricing --role contributor \
   --scopes /subscriptions/$SUB/resourceGroups/$RG --sdk-auth | gh secret set AZURE_CREDENTIALS -R <new-owner>/<new-repo>
 ```
 (Or copy the JSON into **Settings → Secrets and variables → Actions → New

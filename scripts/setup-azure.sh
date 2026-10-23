@@ -2,18 +2,22 @@
 # Creates the Azure resources and GitHub secret needed by the pipeline.
 set -euo pipefail
 
-SUBSCRIPTION_ID="78407db7-ee1b-45db-86c3-dfe2aeb169cf"      # az account list -o table
+TENANT_ID="070d72d1-ce82-4188-bd4e-dc4af1aca5b8"            # personal tenant
+SUBSCRIPTION_ID="0cceb4a7-fad3-4858-807c-73e7339597b7"      # personal subscription (az account list -o table)
 LOCATION="eastus"                            # any region with ML quota
 RESOURCE_GROUP="gl-pro3rg"   # must equal config-infra-prod.yml
 WORKSPACE="gl-pro3ws"         # must equal config-infra-prod.yml
-GITHUB_REPO="santsada/autovehiclepricing"  # e.g. my-user/used-cars-mlops
-SP_NAME="Azure-ARM-Prod-AutoVehiclePricing"             # service principal display name
+GITHUB_REPO="santsada/gl-autovehiclepricing"  # e.g. my-user/used-cars-mlops
+SP_NAME="gl-autovehiclepricing"             # service principal display name
 
 if [[ "$SUBSCRIPTION_ID" == \<* || "$RESOURCE_GROUP" == \<* || "$WORKSPACE" == \<* || "$GITHUB_REPO" == \<* ]]; then
   echo "Edit the variables at the top of this script first." >&2
   exit 1
 fi
 
+if [[ "$(az account show --query tenantId -o tsv 2>/dev/null)" != "$TENANT_ID" ]]; then
+  az login --tenant "$TENANT_ID" -o none
+fi
 az account set --subscription "$SUBSCRIPTION_ID"
 az extension add --name ml --yes >/dev/null 2>&1 || az extension update --name ml >/dev/null
 
