@@ -1,0 +1,188 @@
+name: deploy-model-training-pipeline
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  get-config:
+    runs-on: ubuntu-latest
+    outputs:
+      resource_group: ${{ steps.cfg.outputs.resource_group }}
+      aml_workspace: ${{ steps.cfg.outputs.aml_workspace }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Install PyYAML
+        run: python -m pip install pyyaml
+
+      - name: Read Azure config
+        id: cfg
+        run: |
+          python - <<'PY'
+          import os, yaml
+          with open("config-infra-prod.yml", "r") as f:
+              cfg = yaml.safe_load(f) or {}
+          cfg = cfg.get("variables", cfg)
+          rg = cfg.get("resource_group", "")
+          ws = cfg.get("aml_workspace", "")
+          if not rg or not ws:
+              raise SystemExit("resource_group and aml_workspace must be set in config-infra-prod.yml")
+          with open(os.environ["GITHUB_OUTPUT"], "a") as out:
+              out.write(f"resource_group={rg}\n")
+              out.write(f"aml_workspace={ws}\n")
+          print(f"Resource Group: {rg}")
+          print(f"Workspace: {ws}")
+          PY
+
+  create-compute:
+    needs: get-config
+    runs-on: ubuntu-latest
+    env:
+      RESOURCE_GROUP: ${{ needs.get-config.outputs.resource_group }}
+      AML_WORKSPACE: ${{ needs.get-config.outputs.aml_workspace }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install Azure ML extension
+        run: az extension add -n ml -y || az extension update -n ml -y
+
+      - name: Create Azure ML compute cluster
+        run: |
+          az ml compute show --name cpu-cluster \
+            --resource-group "$RESOURCE_GROUP" \
+            --workspace-name "$AML_WORKSPACE" >/dev/null 2>&1 || \
+          az ml compute create \
+            --name cpu-cluster \
+            --type amlcompute \
+            --min-instances 0 \
+            --max-instances 1 \
+            --size Standard_DS11_v2 \
+            --idle-time-before-scale-down 1800 \
+            --resource-group "$RESOURCE_GROUP" \
+            --workspace-name "$AML_WORKSPACE"
+
+  register-dataset:
+    needs: [get-config, create-compute]
+    runs-on: ubuntu-latest
+    env:
+      RESOURCE_GROUP: ${{ needs.get-config.outputs.resource_group }}
+      AML_WORKSPACE: ${{ needs.get-config.outputs.aml_workspace }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install Azure ML extension
+        run: az extension add -n ml -y || az extension update -n ml -y
+
+      - name: Register dataset
+        run: |
+          az ml data create \
+            --file mlops/azureml/train/data.yml \
+            --resource-group "$RESOURCE_GROUP" \
+            --workspace-name "$AML_WORKSPACE"
+
+  register-environment:
+    needs: [get-config, create-compute]
+    runs-on: ubuntu-latest
+    env:
+      RESOURCE_GROUP: ${{ needs.get-config.outputs.resource_group }}
+      AML_WORKSPACE: ${{ needs.get-config.outputs.aml_workspace }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install Azure ML extension
+        run: az extension add -n ml -y || az extension update -n ml -y
+
+      - name: Register Azure ML environment
+        run: |
+          az ml environment create \
+            --file mlops/azureml/train/train-env.yml \
+            --resource-group "$RESOURCE_GROUP" \
+            --workspace-name "$AML_WORKSPACE"
+
+  register-components:
+    needs: [get-config, register-dataset, register-environment]
+    runs-on: ubuntu-latest
+    env:
+      RESOURCE_GROUP: ${{ needs.get-config.outputs.resource_group }}
+      AML_WORKSPACE: ${{ needs.get-config.outputs.aml_workspace }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install Azure ML extension
+        run: az extension add -n ml -y || az extension update -n ml -y
+
+      - name: Register prep component
+        run: |
+          az ml component create \
+            --file mlops/azureml/train/prep.yml \
+            --resource-group "$RESOURCE_GROUP" \
+            --workspace-name "$AML_WORKSPACE"
+
+      - name: Register train component
+        run: |
+          az ml component create \
+            --file mlops/azureml/train/train.yml \
+            --resource-group "$RESOURCE_GROUP" \
+            --workspace-name "$AML_WORKSPACE"
+
+      - name: Register register component
+        run: |
+          az ml component create \
+            --file mlops/azureml/train/register.yml \
+            --resource-group "$RESOURCE_GROUP" \
+            --workspace-name "$AML_WORKSPACE"
+
+  run-pipeline:
+    needs: [get-config, register-components]
+    runs-on: ubuntu-latest
+    env:
+      RESOURCE_GROUP: ${{ needs.get-config.outputs.resource_group }}
+      AML_WORKSPACE: ${{ needs.get-config.outputs.aml_workspace }}
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          creds: ${{ secrets.AZURE_CREDENTIALS }}
+
+      - name: Install Azure ML extension
+        run: az extension add -n ml -y || az extension update -n ml -y
+
+      - name: Submit Azure ML pipeline job
+        run: |
+          az ml job create \
+            --file mlops/azureml/train/newpipeline.yml \
+            --resource-group "$RESOURCE_GROUP" \
+            --workspace-name "$AML_WORKSPACE"
