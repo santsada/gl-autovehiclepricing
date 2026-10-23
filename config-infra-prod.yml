@@ -15,10 +15,5 @@ variables:
   enable_monitoring: false
   ado_service_connection_rg: Azure-ARM-Prod
   ado_service_connection_aml_ws: Azure-ARM-Prod
-
-  # >>> CHANGE FOR NEW AZURE TENANT <<<
-  # Must be the exact names of the resource group and Azure ML workspace that
-  # you create in the NEW tenant/subscription (RUNBOOK step 3). The previous
-  # project used: gl-resourcegrp / gl-workspace.
-  resource_group: <your-resource-group-name>
-  aml_workspace: <your-aml-workspace-name>
+  resource_group: gl-resourcegrp
+  aml_workspace: gl-workspace
