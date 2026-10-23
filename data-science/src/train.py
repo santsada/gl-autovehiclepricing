@@ -18,10 +18,8 @@ The sweep launches many trials with different ``n_estimators`` / ``max_depth`` a
 keeps the trial with the lowest ``MSE``. The metric name ``MSE`` here must match
 ``objective.primary_metric`` in ``newpipeline.yml``.
 
-Nothing in this file is tenant- or account-specific, so it does not need to change
-when you move to a new GitHub account or Azure tenant.
 """
-
+import numpy as np
 import argparse
 from pathlib import Path
 
@@ -73,10 +71,11 @@ def main(args):
     mse = mean_squared_error(y_test, predictions)
     mae = mean_absolute_error(y_test, predictions)
     r2 = r2_score(y_test, predictions)
-
+    rmse = float(np.sqrt(mse))
     # Inside an Azure ML job these calls are recorded against the job automatically.
     mlflow.log_params({"n_estimators": args.n_estimators, "max_depth": args.max_depth})
-    mlflow.log_metrics({"MSE": mse, "MAE": mae, "R2": r2})
+    # mlflow.log_metrics({"MSE": mse, "MAE": mae, "R2": r2})
+    mlflow.log_metrics({"MSE": mse, "MAE": mae, "R2": r2, "RMSE": rmse})
 
     model_path = Path(args.model_output)
     model_path.mkdir(parents=True, exist_ok=True)
